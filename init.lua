@@ -51,12 +51,10 @@ local function update_player_biome(player)
     data.current_type = biome_type
 
     if effect then
-        -- ВИКОРИСТОВУЄМО LEAN_PHYSICS
-        lean_physics.set_modifier(p_name, "biome", {
-            speed = effect.speed,
-            jump = effect.jump,
-            gravity = effect.gravity
-        })
+        -- Use playerphysics API / Використовуємо API playerphysics
+        playerphysics.add_physics_factor(player, "speed", "biome_effect", effect.speed)
+        playerphysics.add_physics_factor(player, "jump", "biome_effect", effect.jump)
+        playerphysics.add_physics_factor(player, "gravity", "biome_effect", effect.gravity)
         
         if data.hud_id then
             player:hud_change(data.hud_id, "text", effect.text)
@@ -72,8 +70,10 @@ local function update_player_biome(player)
             })
         end
     else
-        -- ВИКОРИСТОВУЄМО LEAN_PHYSICS ДЛЯ СКИДАННЯ
-        lean_physics.clear_modifier(p_name, "biome")
+        -- Clear playerphysics modifiers / Очищаємо модифікатори playerphysics
+        playerphysics.remove_physics_factor(player, "speed", "biome_effect")
+        playerphysics.remove_physics_factor(player, "jump", "biome_effect")
+        playerphysics.remove_physics_factor(player, "gravity", "biome_effect")
         
         if data.hud_id then
             player:hud_remove(data.hud_id)
@@ -95,13 +95,9 @@ minetest.register_on_leaveplayer(function(player)
     local data = player_data[p_name]
     if data then
         if data.hud_id then player:hud_remove(data.hud_id) end
-        lean_physics.clear_modifier(p_name, "biome")
+        playerphysics.remove_physics_factor(player, "speed", "biome_effect")
+        playerphysics.remove_physics_factor(player, "jump", "biome_effect")
+        playerphysics.remove_physics_factor(player, "gravity", "biome_effect")
         player_data[p_name] = nil
-    end
-end)
-
-minetest.register_on_shutdown(function()
-    for _, player in ipairs(minetest.get_connected_players()) do
-        lean_physics.clear_modifier(player:get_player_name(), "biome")
     end
 end)
